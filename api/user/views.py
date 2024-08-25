@@ -2,10 +2,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import RegistrationSerializer
-from rest_framework.authtoken.models import Token
+from .serializers import RegistrationSerializer, UpdateUserSerializer
 from django.contrib.auth import authenticate, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.tokens import AccessToken
 
 @api_view(["POST"])
 def register_view(request):
@@ -19,8 +19,6 @@ def register_view(request):
             data["username"] = account.username
             data['phone_number'] = account.phone_number
             data['role'] = account.role
-            token = Token.objects.get(user=account).key
-            data["token"] = token
         else:
             data = serializer.errors
         return Response(data)
@@ -34,10 +32,9 @@ def login_view(request):
         user = authenticate(username=username, password=password)
 
         if user is not None:
-            Token.objects.filter(user=user).delete()
-            token, created = Token.objects.get_or_create(user=user)
+            access = AccessToken.for_user(user)
             return Response({
-                "token": token.key,
+                "token": str(access),
                 "username": user.username,
                 "email": user.email,
             })
@@ -45,10 +42,10 @@ def login_view(request):
             # Return an error response if authentication fails
             return Response({"error": "Invalid credentials"}, status=400)
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def change_password(request):
-    if request.method == "POST":
+    if request.method == "PUT":
         user = request.user
         old_password = request.data.get("old_password")
         new_password = request.data.get("new_password")
@@ -72,3 +69,21 @@ def change_password(request):
         update_session_auth_hash(request, user)
         return Response({"success": "Password updated successfully"}, status=200)
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    return Response({"message": "Logged out successfully"}, status=205)
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def change_user_details(request):
+    if request.method == "PUT":
+        user = request.user
+        serializer = UpdateUserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "User updated successfully",
+                "data": serializer.data
+            }, status=200)
+            return Response(serializer.errors, status=400)
