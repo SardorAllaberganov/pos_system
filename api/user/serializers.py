@@ -40,3 +40,8 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         instance.phone_number = validated_data.get("phone_number", instance.phone_number)
         instance.save()
         return instance
+
+class UpdateUserRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ("role",)

@@ -2,10 +2,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import RegistrationSerializer, UpdateUserSerializer
+from .serializers import RegistrationSerializer, UpdateUserSerializer, UpdateUserRoleSerializer
 from django.contrib.auth import authenticate, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import AccessToken
+from .models import Account
 
 @api_view(["POST"])
 def register_view(request):
@@ -86,4 +87,26 @@ def change_user_details(request):
                 "message": "User updated successfully",
                 "data": serializer.data
             }, status=200)
-            return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=400)
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def change_user_role(request, username):
+    if request.method == "PUT":
+        user = request.user
+
+        if user.role != 'Admin' and user.role != 'Manager':
+            return Response({"error": "Permission denied. Only admins or managers can update user roles."},
+                            status=403)
+        try:
+            account = Account.objects.get(username=username)
+        except Account.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+        serializer = UpdateUserRoleSerializer(account, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': "User role updated successfully"}, status=200)
+        return Response(serializer.errors, status=400)
+
+
