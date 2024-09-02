@@ -109,4 +109,16 @@ def change_user_role(request, username):
             return Response({'message': "User role updated successfully"}, status=200)
         return Response(serializer.errors, status=400)
 
-
+@api_view(["delete"])
+@permission_classes([IsAuthenticated])
+def delete_user(request, username):
+    if request.method == "DELETE":
+        user = request.user
+        if user.role != "Admin" and user.role != "Manager":
+            return Response({"error": "Permission denied. Only admins or managers can delete users."}, status=403)
+        try:
+            account = Account.objects.get(username=username)
+            account.delete()
+            return Response({"message": "User deleted successfully"}, status=200)
+        except Account.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
