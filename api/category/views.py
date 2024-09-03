@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from api.category.models import Category
-
 from .serializers import CategorySerializer
+from api.core.decorators import check_role
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -25,12 +25,9 @@ def category_detail(request, category_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@check_role(["Admin", "Manager"])
 def create_category(request):
     if request.method == 'POST':
-        user = request.user
-        if user.role != 'Admin' and user.role != 'Manager':
-            return Response({"error": "Permission denied. Only admins or managers can create a category."},
-                            status=403)
         serializer = CategorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -41,10 +38,6 @@ def create_category(request):
 @permission_classes([IsAuthenticated])
 def update_category(request, category_id):
     if request.method == 'PUT':
-        user = request.user
-        if user.role != "Admin" and user.role != "Manager":
-            return Response({"error": "Permission denied. Only admins or managers can update category."}, status=403)
-
         try:
             category = Category.objects.get(id=category_id)
         except Category.DoesNotExist:
@@ -55,3 +48,4 @@ def update_category(request, category_id):
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+

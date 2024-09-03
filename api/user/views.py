@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import AccessToken
 from .models import Account
+from api.core.decorators import check_role
 
 @api_view(["POST"])
 def register_view(request):
@@ -91,13 +92,9 @@ def change_user_details(request):
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
+@check_role(["Admin", "Manager"])
 def change_user_role(request, username):
     if request.method == "PUT":
-        user = request.user
-
-        if user.role != 'Admin' and user.role != 'Manager':
-            return Response({"error": "Permission denied. Only admins or managers can update user roles."},
-                            status=403)
         try:
             account = Account.objects.get(username=username)
         except Account.DoesNotExist:
@@ -111,11 +108,9 @@ def change_user_role(request, username):
 
 @api_view(["delete"])
 @permission_classes([IsAuthenticated])
+@check_role(["Admin", "Manager"])
 def delete_user(request, username):
     if request.method == "DELETE":
-        user = request.user
-        if user.role != "Admin" and user.role != "Manager":
-            return Response({"error": "Permission denied. Only admins or managers can delete users."}, status=403)
         try:
             account = Account.objects.get(username=username)
             account.delete()
