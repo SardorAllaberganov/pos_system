@@ -9,6 +9,11 @@ from rest_framework_simplejwt.tokens import AccessToken
 from .models import Account
 from api.core.decorators import check_role
 
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+
 @api_view(["POST"])
 def register_view(request):
     if request.method == "POST":
@@ -117,3 +122,46 @@ def delete_user(request, username):
             return Response({"message": "User deleted successfully"}, status=200)
         except Account.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    if request.method == "POST":
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "Email is required"}, status=400)
+
+        try:
+            account = Account.objects.get(email=email)
+        except Account.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+
+        uid = urlsafe_base64_encode(force_bytes(account.id))
+        token = default_token_generator.make_token(account)
+        reset_link = f"http://127.0.0.1:8000/reset-password/{uid}/{token}"
+
+        send_mail(
+            subject="Password reset request",
+            message=f"Please click the link to reset your password: {reset_link}",
+            from_email="info@pos.com",
+            recipient_list=[email],
+        )
+        return Response({"message": "Password reset link sent to your email", 'link': reset_link}, status=200)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def reset_password_confirm(request, uidb64, token):
+    if request.method == "POST":
+        if not request.data.get("new_password"):
+            return Response({"error": "New password is required"}, status=400)
+
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            account = Account.objects.get(pk=uid)
+        except (TypeError, ValueError, Account.DoesNotExist):
+            return Response({"error": "Invalid token"}, status=400)
+
+        account.set_password(request.data.get("new_password"))
+        account.save()
+
+        return Response({"message": "Password updated successfully"}, status=200)
