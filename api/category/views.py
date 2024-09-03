@@ -49,3 +49,15 @@ def update_category(request, category_id):
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
 
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+@check_role(["Admin", "Manager"])
+def delete_category(request, category_id):
+    if request.method == 'DELETE':
+        try:
+            category = Category.objects.get(id=category_id)
+            category.delete()
+            return Response({'message': "Category successfully deleted"},status=204)
+        except Category.DoesNotExist:
+            return Response({'message': "Category not found"}, status=404)
