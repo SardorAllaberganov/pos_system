@@ -15,7 +15,7 @@ class Category(models.Model):
 
 
 class SubCategory(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     category = models.ForeignKey(Category, related_name="subcategories", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -73,4 +73,54 @@ def delete_category(request, category_id):
 def all_subcategories(request):
     subcategories = SubCategory.objects.all()
     serializer = SubcategorySerializer(subcategories, many=True)
-    return Response(serializer.data)
+    return Response({"message": "All subcategories fetched successfully", "data": serializer.data}, status=200)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def subcategory_detail(request, subcategory_id):
+    try:
+        subcategory = SubCategory.objects.get(id=subcategory_id)
+        serializer = SubcategorySerializer(subcategory)
+        return Response({"message": "Subcategory fetched successfully", "data": serializer.data}, status=200)
+    except SubCategory.DoesNotExist:
+        return Response({'message': "Subcategory not found"}, status=404)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@check_role(["Admin", "Manager"])
+def create_subcategory(request):
+    if request.method == 'POST':
+        serializer = SubcategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Subcategory created successfully", "data": serializer.data}, status=201)
+        else:
+            return Response({"message": serializer.errors}, status=400)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+@check_role(["Admin", "Manager"])
+def update_subcategory(request, subcategory_id):
+    if request.method == 'PUT':
+        try:
+            subcategory = SubCategory.objects.get(id=subcategory_id)
+        except SubCategory.DoesNotExist:
+            return Response({'message': "Subcategory not found"}, status=404)
+
+        serializer = SubcategorySerializer(subcategory, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Subcategory updated successfully", "data": serializer.data}, status=200)
+        return Response({"message": serializer.errors}, status=400)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+@check_role(["Admin", "Manager"])
+def delete_subcategory(request, subcategory_id):
+    if request.method == 'DELETE':
+        try:
+            subcategory = SubCategory.objects.get(id=subcategory_id)
+            subcategory.delete()
+            return Response({'message': "Subcategory deleted successfully"}, status=204)
+        except SubCategory.DoesNotExist:
+            return Response({'message': "Subcategory not found"}, status=404)
