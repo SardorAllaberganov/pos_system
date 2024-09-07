@@ -26,9 +26,9 @@ def register_view(request):
             data["username"] = account.username
             data['phone_number'] = account.phone_number
             data['role'] = account.role
+            return Response({"message": "User created successfully", "data": data})
         else:
-            data = serializer.errors
-        return Response(data)
+            return Response({"message": serializer.errors})
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -74,7 +74,7 @@ def change_password(request):
 
         # Update the session to prevent logging the user out after changing the password
         update_session_auth_hash(request, user)
-        return Response({"success": "Password updated successfully"}, status=200)
+        return Response({"message": "Password updated successfully"}, status=200)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
