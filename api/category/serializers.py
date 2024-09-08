@@ -5,9 +5,11 @@ from api.category.models import Category, SubCategory
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ['id', 'name', 'description']
 
 class SubcategorySerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+
     class Meta:
         model = SubCategory
-        fields = '__all__'
+        fields = ['id', 'name', 'category']

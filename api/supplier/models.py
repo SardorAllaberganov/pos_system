@@ -40,7 +40,7 @@ class PurchaseOrderItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        Product = apps.get_model('api.product.models', 'Product')
+        Product = apps.get_model('product', 'Product')
         product_name = Product.objects.get(id=self.product.id).name
         return f"{product_name} - {self.quantity} - {self.price}"
 

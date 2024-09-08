@@ -136,3 +136,8 @@ GitHub.sublime-settings
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+.idea
+.static
+.static_cdn
+.media
+.media_cdn
