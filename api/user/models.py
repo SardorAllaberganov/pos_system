@@ -39,8 +39,8 @@ class Account(AbstractBaseUser):
     username = models.CharField(max_length=30, unique=True)
     name = models.CharField(max_length=30)
     phone_number = models.CharField(max_length=12)
-    role = models.CharField(max_length=7, choices=(('Admin', 'Admin'), ('Cashier', 'Cashier'), ('Manager', 'Manager')),
-                            default='Cashier')
+    role = models.CharField(max_length=7, choices=(('admin', 'Admin'), ('cashier', 'Cashier'), ('manager', 'Manager')),
+                            default='cashier')
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name='date joined')
     last_login = models.DateTimeField(auto_now=True, verbose_name='last login')
     is_active = models.BooleanField(default=True)
