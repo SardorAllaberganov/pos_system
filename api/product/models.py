@@ -45,7 +45,7 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
         if is_new:
-            purchase_order = PurchaseOrder.objects.create(
+            purchase_order = PurchaseOrder.all_orders.create(
                 supplier=self.supplier,
                 total_amount=self.price * self.quantity,
             )
@@ -61,7 +61,7 @@ class Product(models.Model):
         elif old_quantity is not None and self.quantity > old_quantity:
             if self.quantity != old_quantity:
                 new_quantity = self.quantity - old_quantity
-                purchase_order = PurchaseOrder.objects.create(
+                purchase_order = PurchaseOrder.all_orders.create(
                     supplier=self.supplier,
                     total_amount=self.price * new_quantity
                 )
@@ -71,7 +71,6 @@ class Product(models.Model):
                     quantity=new_quantity,
                     price=self.price
                 )
-
 
     def __str__(self):
         return self.name
