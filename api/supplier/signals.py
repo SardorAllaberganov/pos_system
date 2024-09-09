@@ -2,8 +2,9 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from rest_framework.exceptions import ValidationError
 
-from api.supplier.models import Supplier, PurchaseOrder, PurchaseOrderItem, SupplierPayment
+from api.supplier.models import SupplierPayment
 from django.db.models import Sum
+
 
 @receiver(post_save, sender=SupplierPayment)
 def update_due_amount_and_order_status(sender, instance, created, **kwargs):

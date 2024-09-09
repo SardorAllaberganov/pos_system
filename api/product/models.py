@@ -28,9 +28,6 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def delete_product_image(self, instance, **kwargs):
-        if instance.image:
-            instance.image.delete(False)
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -75,16 +72,3 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-
-@receiver(pre_save, sender=Product)
-def product_pre_save(sender, instance, **kwargs):
-    if instance.pk:
-        try:
-            old_instance = Product.objects.get(pk=instance.pk)
-        except Product.DoesNotExist:
-            return
-        old_product_image = old_instance.product_image
-        if old_product_image and old_product_image != instance.product_image:
-            old_image_path = old_product_image.path
-            if os.path.isfile(old_image_path):
-                os.remove(old_image_path)
