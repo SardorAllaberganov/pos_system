@@ -5,12 +5,14 @@ from api.supplier.serializers import SupplierSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from api.core.decorators import check_role
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def supplier_list(request):
     suppliers = Supplier.objects.all()
     serializer = SupplierSerializer(suppliers, many=True)
     return Response({"message": "Successfully fetched all suppliers", "data": serializer.data}, status=200)
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -22,6 +24,7 @@ def supplier_detail(request, supplier_id):
     serializer = SupplierSerializer(supplier, many=True)
     return Response({"message": "Successfully fetched supplier", "data": serializer.data}, status=200)
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @check_role(['Admin', 'Manager'])
@@ -32,6 +35,7 @@ def create_supplier(request):
         return Response({"message": "Successfully created supplier", "data": serializer.data}, status=201)
     else:
         return Response({"message": serializer.errors}, status=400)
+
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -49,6 +53,7 @@ def update_supplier(request, supplier_id):
         except Supplier.DoesNotExist:
             return Response({"message": "Supplier not found"}, status=404)
 
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 @check_role(['Admin', 'Manager'])
@@ -60,3 +65,20 @@ def delete_supplier(request, supplier_id):
             return Response({"message": "Successfully deleted supplier", "data": supplier.name}, status=200)
         except Supplier.DoesNotExist:
             return Response({"message": "Supplier not found"}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def supplier_order_total(request, supplier_id):
+    try:
+        supplier = Supplier.objects.get(pk=supplier_id)
+    except Supplier.DoesNotExist:
+        return Response({"message": "Supplier not found"}, status=404)
+    serializer = SupplierSerializer(supplier)
+    total_order_amount = serializer.data['total_order_amount']
+    total_paid_amount = serializer.data['total_paid_amount']
+    total_due_amount = serializer.data['total_due_amount']
+    return Response({"message": "Successfully fetched total order",
+                     "data": {"total_order_amount": total_order_amount, "total_paid_amount": total_paid_amount,
+                              "total_due_amount": total_due_amount}},
+                    status=200)
