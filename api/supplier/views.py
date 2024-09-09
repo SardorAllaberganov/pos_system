@@ -27,7 +27,7 @@ def supplier_detail(request, supplier_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@check_role(['Admin', 'Manager'])
+@check_role(['admin', 'manager'])
 def create_supplier(request):
     serializer = SupplierSerializer(data=request.data)
     if serializer.is_valid():
@@ -39,7 +39,7 @@ def create_supplier(request):
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
-@check_role(['Admin', 'Manager'])
+@check_role(['admin', 'manager'])
 def update_supplier(request, supplier_id):
     if request.method == "PUT":
         try:
@@ -56,7 +56,7 @@ def update_supplier(request, supplier_id):
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-@check_role(['Admin', 'Manager'])
+@check_role(['admin', 'manager'])
 def delete_supplier(request, supplier_id):
     if request.method == "DELETE":
         try:

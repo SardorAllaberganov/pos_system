@@ -6,6 +6,7 @@ from api.category.models import Category, SubCategory
 from .serializers import CategorySerializer, SubcategorySerializer
 from api.core.decorators import check_role
 
+
 ##########################################
 # Category views
 ##########################################
@@ -15,6 +16,7 @@ def all_categories(request):
     categories = Category.objects.all()
     serializer = CategorySerializer(categories, many=True)
     return Response({"message": "Fetched all categories", "data": serializer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -26,9 +28,10 @@ def category_detail(request, category_id):
     except Category.DoesNotExist:
         return Response({'message': "Category not found"}, status=404)
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(["admin", "manager"])
 def create_category(request):
     if request.method == 'POST':
         serializer = CategorySerializer(data=request.data)
@@ -36,6 +39,7 @@ def create_category(request):
             serializer.save()
             return Response({"message": "Category created successfully", "data": serializer.data}, status=201)
         return Response({"message": serializer.errors}, status=400)
+
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -52,9 +56,10 @@ def update_category(request, category_id):
             return Response({"message": "Category updated successfully", "data": serializer.data}, status=200)
         return Response({"message": serializer.errors}, status=400)
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(["admin", "manager"])
 def delete_category(request, category_id):
     if request.method == 'DELETE':
         try:
@@ -63,6 +68,7 @@ def delete_category(request, category_id):
             return Response({'message': "Category successfully deleted"}, status=204)
         except Category.DoesNotExist:
             return Response({'message': "Category not found"}, status=404)
+
 
 ##########################################
 # SubCategory views
@@ -75,6 +81,7 @@ def all_subcategories(request):
     serializer = SubcategorySerializer(subcategories, many=True)
     return Response({"message": "All subcategories fetched successfully", "data": serializer.data}, status=200)
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def subcategory_detail(request, subcategory_id):
@@ -85,9 +92,10 @@ def subcategory_detail(request, subcategory_id):
     except SubCategory.DoesNotExist:
         return Response({'message': "Subcategory not found"}, status=404)
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(["admin", "manager"])
 def create_subcategory(request):
     if request.method == 'POST':
         serializer = SubcategorySerializer(data=request.data)
@@ -97,9 +105,10 @@ def create_subcategory(request):
         else:
             return Response({"message": serializer.errors}, status=400)
 
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(["admin", "manager"])
 def update_subcategory(request, subcategory_id):
     if request.method == 'PUT':
         try:
@@ -113,9 +122,10 @@ def update_subcategory(request, subcategory_id):
             return Response({"message": "Subcategory updated successfully", "data": serializer.data}, status=200)
         return Response({"message": serializer.errors}, status=400)
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(["admin", "manager"])
 def delete_subcategory(request, subcategory_id):
     if request.method == 'DELETE':
         try:

@@ -32,7 +32,7 @@ def product_detail(request, product_id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(['admin', 'manager'])
 def delete_product(request, product_id):
     if request.method == "DELETE":
         try:

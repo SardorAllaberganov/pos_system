@@ -14,6 +14,7 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 
+
 @api_view(["POST"])
 def register_view(request):
     if request.method == "POST":
@@ -29,6 +30,7 @@ def register_view(request):
             return Response({"message": "User created successfully", "data": data})
         else:
             return Response({"message": serializer.errors})
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -48,6 +50,7 @@ def login_view(request):
         else:
             # Return an error response if authentication fails
             return Response({"error": "Invalid credentials"}, status=400)
+
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -76,10 +79,12 @@ def change_password(request):
         update_session_auth_hash(request, user)
         return Response({"message": "Password updated successfully"}, status=200)
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
     return Response({"message": "Logged out successfully"}, status=205)
+
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -95,9 +100,10 @@ def change_user_details(request):
             }, status=200)
         return Response(serializer.errors, status=400)
 
+
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(["admin", "manager"])
 def change_user_role(request, username):
     if request.method == "PUT":
         try:
@@ -111,9 +117,10 @@ def change_user_role(request, username):
             return Response({'message': "User role updated successfully"}, status=200)
         return Response(serializer.errors, status=400)
 
+
 @api_view(["delete"])
 @permission_classes([IsAuthenticated])
-@check_role(["Admin", "Manager"])
+@check_role(["admin", "manager"])
 def delete_user(request, username):
     if request.method == "DELETE":
         try:
@@ -122,6 +129,7 @@ def delete_user(request, username):
             return Response({"message": "User deleted successfully"}, status=200)
         except Account.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -147,6 +155,7 @@ def reset_password(request):
             recipient_list=[email],
         )
         return Response({"message": "Password reset link sent to your email", 'link': reset_link}, status=200)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
