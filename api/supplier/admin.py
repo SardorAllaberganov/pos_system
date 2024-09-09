@@ -1,9 +1,10 @@
 from django.contrib import admin
+from django import forms
+from rest_framework.exceptions import ValidationError
 
 from api.supplier.models import Supplier, PurchaseOrder, PurchaseOrderItem, SupplierPayment
 
 admin.site.register(Supplier)
-
 
 @admin.register(PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
@@ -17,7 +18,6 @@ class PurchaseOrderItemAdmin(admin.ModelAdmin):
     list_display = ('purchase_order', 'product', 'quantity', 'price', 'total_price')
     readonly_fields = ['total_price']
 
-
 @admin.register(SupplierPayment)
 class SupplierPaymentAdmin(admin.ModelAdmin):
     list_display = ('supplier', 'purchase_order', 'amount', 'payment_date', 'payment_method')
@@ -25,5 +25,5 @@ class SupplierPaymentAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "purchase_order":
-            kwargs["queryset"] = PurchaseOrder.pending_orders.all()
+            kwargs["queryset"] = PurchaseOrder.objects.filter(status='pending')
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
