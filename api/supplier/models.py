@@ -25,6 +25,10 @@ class Supplier(models.Model):
         return self.name
 
 
+class PendingPurchaseOrderManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(status='pending')
+
 class PurchaseOrder(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='purchase_orders')
     order_date = models.DateTimeField(auto_now_add=True)
@@ -32,8 +36,11 @@ class PurchaseOrder(models.Model):
     status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('approved', 'Approved')],
                               default='pending')
 
+    all_orders = models.Manager()
+    pending_orders = PendingPurchaseOrderManager()
+
     def __str__(self):
-        return f"Order {self.id} - {self.supplier.name}"
+        return f"Order {self.id} - {self.supplier.name} - {self.supplier_id}"
 
 
 class PurchaseOrderItem(models.Model):
@@ -41,6 +48,9 @@ class PurchaseOrderItem(models.Model):
     product = models.ForeignKey("product.Product", on_delete=models.CASCADE, related_name='purchase_orders_item')
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def total_price(self):
+        return self.quantity * self.price
 
     def __str__(self):
         Product = apps.get_model('product', 'Product')

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from api.supplier.models import Supplier, SupplierPayment, PurchaseOrder
+from api.supplier.models import Supplier, SupplierPayment, PurchaseOrder, PurchaseOrderItem
+from api.product.models import Product
 
 
 class SupplierSerializer(serializers.ModelSerializer):
@@ -28,3 +29,30 @@ class SupplierPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupplierPayment
         fields = '__all__'
+
+
+class PurchaseOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrder
+        fields = '__all__'
+
+    class CustomSupplierSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Supplier
+            fields = ['name']
+
+    supplier = CustomSupplierSerializer()
+
+
+class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+    total_amount = serializers.ReadOnlyField(source='total_price')
+    class Meta:
+        model = PurchaseOrderItem
+        fields = '__all__'
+
+    class CustomProductSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Product
+            fields = ['name']
+
+    product = CustomProductSerializer()

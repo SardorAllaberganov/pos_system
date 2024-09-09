@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from api.supplier.models import Supplier
-from api.supplier.serializers import SupplierSerializer
+from api.supplier.models import Supplier, PurchaseOrder, PurchaseOrderItem
+from api.supplier.serializers import SupplierSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from api.core.decorators import check_role
 
@@ -82,3 +82,26 @@ def supplier_order_total(request, supplier_id):
                      "data": {"total_order_amount": total_order_amount, "total_paid_amount": total_paid_amount,
                               "total_due_amount": total_due_amount}},
                     status=200)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def supplier_orders(request, supplier_id):
+    try:
+        orders = PurchaseOrder.all_orders.filter(supplier=supplier_id)
+        serializer = PurchaseOrderSerializer(orders, many=True)
+        return Response({"message": "Successfully fetched orders", "data": serializer.data}, status=200)
+    except Supplier.DoesNotExist:
+        return Response({"message": "Supplier not found or has no orders"}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def supplier_order_items(request, supplier_id):
+    try:
+        purchase_orders = PurchaseOrder.all_orders.filter(supplier_id=supplier_id)
+        order_items = PurchaseOrderItem.objects.filter(purchase_order__in=purchase_orders)
+        serializer = PurchaseOrderItemSerializer(order_items, many=True)
+        return Response({"message": "Successfully fetched orders", "data": serializer.data}, status=200)
+    except Supplier.DoesNotExist:
+        return Response({"message": "Supplier not found"}, status=404)
