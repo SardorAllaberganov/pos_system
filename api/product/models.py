@@ -28,47 +28,6 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
-    def save(self, *args, **kwargs):
-        is_new = self.pk is None
-
-        old_quantity = None
-        if not is_new:
-            try:
-                old_quantity = Product.objects.get(pk=self.pk).quantity
-            except Product.DoesNotExist:
-                old_quantity = None
-
-        super().save(*args, **kwargs)
-
-        if is_new:
-            purchase_order = PurchaseOrder.objects.create(
-                supplier=self.supplier,
-                total_amount=self.price * self.quantity,
-            )
-            purchase_order.save()
-
-            PurchaseOrderItem.objects.create(
-                purchase_order=purchase_order,
-                product=self,
-                quantity=self.quantity,
-                price=self.price
-            )
-            purchase_order.save()
-        elif old_quantity is not None and self.quantity > old_quantity:
-            if self.quantity != old_quantity:
-                new_quantity = self.quantity - old_quantity
-                purchase_order = PurchaseOrder.objects.create(
-                    supplier=self.supplier,
-                    total_amount=self.price * new_quantity
-                )
-                PurchaseOrderItem.objects.create(
-                    purchase_order=purchase_order,
-                    product=self,
-                    quantity=new_quantity,
-                    price=self.price
-                )
-
     def __str__(self):
         return self.name
 
