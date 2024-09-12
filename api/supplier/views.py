@@ -88,7 +88,7 @@ def supplier_order_total(request, supplier_id):
 @permission_classes([AllowAny])
 def supplier_orders(request, supplier_id):
     try:
-        orders = PurchaseOrder.all_orders.filter(supplier=supplier_id)
+        orders = PurchaseOrder.objects.filter(supplier=supplier_id)
         serializer = PurchaseOrderSerializer(orders, many=True)
         return Response({"message": "Successfully fetched orders", "data": serializer.data}, status=200)
     except Supplier.DoesNotExist:
@@ -99,7 +99,7 @@ def supplier_orders(request, supplier_id):
 @permission_classes([AllowAny])
 def supplier_order_items(request, supplier_id):
     try:
-        purchase_orders = PurchaseOrder.all_orders.filter(supplier_id=supplier_id)
+        purchase_orders = PurchaseOrder.objects.filter(supplier_id=supplier_id)
         order_items = PurchaseOrderItem.objects.filter(purchase_order__in=purchase_orders)
         serializer = PurchaseOrderItemSerializer(order_items, many=True)
         return Response({"message": "Successfully fetched orders", "data": serializer.data}, status=200)

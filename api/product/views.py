@@ -6,12 +6,34 @@ from api.product.models import Product
 from .serializers import ProductSerializer
 from api.core.paginator import CustomPagination
 from api.core.decorators import check_role
+from django.db.models import Q
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def all_products(request):
+    search = request.GET.get('search', None)
+    category = request.GET.get('category', None)
+    subcategory = request.GET.get('subcategory', None)
+
     products = Product.objects.all()
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(barcode__icontains=search)
+        )
+
+    if category:
+        products = products.filter(
+            Q(subcategory__category__name__icontains=category)
+        )
+
+    if subcategory:
+        products = products.filter(
+            Q(subcategory__name__icontains=subcategory)
+        )
+
     paginator = CustomPagination()
     paginated_products = paginator.paginate_queryset(products, request)
     serializer = ProductSerializer(paginated_products, many=True)
