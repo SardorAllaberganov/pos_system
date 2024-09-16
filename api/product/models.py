@@ -17,7 +17,7 @@ def upload_location(instance, filename):
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    barcode = models.CharField(max_length=100)
+    barcode = models.CharField(max_length=100, unique=True)
     unit_type = models.CharField(max_length=100)
     quantity = models.IntegerField()
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)

@@ -8,24 +8,22 @@ from api.supplier.models import Supplier
 from api.category.models import SubCategory
 
 
+class CustomSupplierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Supplier
+        fields = ['id', 'name']
+
+
+class CustomCreatorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ('id', 'username', 'name', 'email')
+
+
 class ProductSerializer(serializers.ModelSerializer):
     subcategory = serializers.PrimaryKeyRelatedField(queryset=SubCategory.objects.all())
     creator = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), required=False)
     supplier = serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.all())
-
-    class CustomSupplierSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Supplier
-            fields = ['id', 'name']
-
-    class CustomCreatorSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Account
-            fields = ('id', 'username', 'name', 'email')
-
-    # creator = CustomCreatorSerializer()
-    # supplier = CustomSupplierSerializer()
-    # subcategory = SubcategorySerializer()
     category = serializers.SerializerMethodField("get_category")
 
     @staticmethod
@@ -38,9 +36,9 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['supplier'] = self.CustomSupplierSerializer(instance.supplier).data
+        representation['supplier'] = CustomSupplierSerializer(instance.supplier).data
         representation['category'] = self.get_category(obj=instance)
-        representation['creator'] = self.CustomCreatorSerializer(instance.creator).data
+        representation['creator'] = CustomCreatorSerializer(instance.creator).data
         representation['subcategory'] = {
             'id': instance.subcategory.id,
             'name': instance.subcategory.name,

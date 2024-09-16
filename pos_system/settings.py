@@ -53,12 +53,25 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    "rest_framework_swagger",
+    'drf_yasg',
     # my app
     'api.user',
     'api.supplier',
     'api.product',
     'api.category'
 ]
+
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    },
+}
 
 REST_FRAMEWORK = {
     # "DEFAULT_AUTHENTICATION_CLASSES": [

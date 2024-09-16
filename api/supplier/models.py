@@ -54,7 +54,7 @@ class PurchaseOrderItem(models.Model):
 class SupplierPayment(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='payments')
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='payments')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=20, decimal_places=2)
     payment_date = models.DateTimeField(auto_now_add=True)
     payment_method = models.CharField(max_length=50,
                                       choices=[('cash', 'Cash'), ('card', 'Card'), ('bank_transfer', 'Bank Transfer')])
