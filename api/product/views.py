@@ -63,3 +63,35 @@ def delete_product(request, product_id):
             return Response({"message": "Product deleted successfully"}, status=200)
         except Product.DoesNotExist:
             return Response({"message": "Product not found"}, status=404)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+@check_role(['admin', 'manager'])
+def update_product(request, product_id):
+    if request.method == "PUT":
+        try:
+            product = Product.objects.get(pk=product_id)
+        except Product.DoesNotExist:
+            return Response({"message": "Product not found"}, status=404)
+
+        serializer = ProductSerializer(product, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Product updated successfully", "data": serializer.data}, status=200)
+        else:
+            return Response({"error": serializer.errors}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@check_role(["admin", 'manager'])
+def create_product(request):
+    if request.method == "POST":
+        data = request.data.copy()
+        data['creator'] = request.user.id
+        serializer = ProductSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Product created successfully", "data": serializer.data}, status=200)
+        return Response({"error": serializer.errors}, status=400)
