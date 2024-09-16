@@ -30,7 +30,7 @@ def create_or_update_purchase_order(sender, instance, created, **kwargs):
     if created:
         purchase_order = PurchaseOrder.objects.create(
             supplier=instance.supplier,
-            total_amount=instance.price * instance.quantity,
+            total_amount=instance.purchase_price * instance.quantity,
         )
         purchase_order.save()
 
@@ -38,7 +38,7 @@ def create_or_update_purchase_order(sender, instance, created, **kwargs):
             product=instance,
             purchase_order=purchase_order,
             quantity=instance.quantity,
-            price=instance.price,
+            purchase_price=instance.purchase_price,
         )
     else:
         try:
@@ -51,12 +51,12 @@ def create_or_update_purchase_order(sender, instance, created, **kwargs):
                 new_quantity = instance.quantity - old_quantity
                 purchase_order = PurchaseOrder.objects.create(
                     supplier=instance.supplier,
-                    total_amount=instance.price * new_quantity,
+                    total_amount=instance.purchase_price * new_quantity,
                 )
 
                 PurchaseOrderItem.objects.create(
                     product=instance,
                     purchase_order=purchase_order,
                     quantity=new_quantity,
-                    price=instance.price,
+                    purchase_price=instance.purchase_price,
                 )

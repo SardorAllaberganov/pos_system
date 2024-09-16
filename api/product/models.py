@@ -20,7 +20,8 @@ class Product(models.Model):
     barcode = models.CharField(max_length=100)
     unit_type = models.CharField(max_length=100)
     quantity = models.IntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     subcategory = models.ForeignKey(SubCategory, related_name="products", on_delete=models.CASCADE)
     creator = models.ForeignKey(Account, on_delete=models.CASCADE)
     supplier = models.ForeignKey(Supplier, related_name="products", on_delete=models.CASCADE)
@@ -30,4 +31,3 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-

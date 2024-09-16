@@ -15,8 +15,9 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 
 @admin.register(PurchaseOrderItem)
 class PurchaseOrderItemAdmin(admin.ModelAdmin):
-    list_display = ('purchase_order', 'product', 'quantity', 'price', 'total_price')
+    list_display = ('purchase_order', 'product', 'quantity', 'purchase_price', 'total_price')
     readonly_fields = ['total_price']
+
 
 @admin.register(SupplierPayment)
 class SupplierPaymentAdmin(admin.ModelAdmin):
