@@ -4,9 +4,6 @@ from django.db import models
 from api.user.models import Account
 from api.category.models import SubCategory
 from api.supplier.models import Supplier, PurchaseOrder, PurchaseOrderItem
-from django.dispatch import receiver
-from django.db.models.signals import pre_save
-
 
 def upload_location(instance, filename):
     file_path = "product_images/{name}-{filename}".format(
