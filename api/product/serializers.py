@@ -2,7 +2,7 @@ import os.path
 
 from rest_framework import serializers
 from .models import Product
-from api.category.serializers import SubcategorySerializer, CategorySerializer
+from api.core.base_serializers import BaseSerializer
 from api.user.models import Account
 from api.supplier.models import Supplier
 from api.category.models import SubCategory
@@ -20,7 +20,7 @@ class CustomCreatorSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'name', 'email')
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(BaseSerializer):
     subcategory = serializers.PrimaryKeyRelatedField(queryset=SubCategory.objects.all())
     creator = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), required=False)
     supplier = serializers.PrimaryKeyRelatedField(queryset=Supplier.objects.all())

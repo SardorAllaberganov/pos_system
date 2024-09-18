@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 
 
 class Customer(models.Model):
@@ -9,6 +10,7 @@ class Customer(models.Model):
     loyalty_points = models.DecimalField(default=0.0, max_digits=100, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return self.name or self.id
