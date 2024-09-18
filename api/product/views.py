@@ -1,7 +1,9 @@
+from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
+import pandas as pd
+import csv
 from api.product.models import Product
 from .serializers import ProductSerializer
 from api.core.paginator import CustomPagination
@@ -95,3 +97,21 @@ def create_product(request):
             serializer.save()
             return Response({"message": "Product created successfully", "data": serializer.data}, status=200)
         return Response({"error": serializer.errors}, status=400)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def product_export_csv(request):
+    if request.method == "GET":
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        response = HttpResponse(content_type="text/csv")
+        response['Content-Disposition'] = 'attachment; filename="products.csv"'
+        writer = csv.writer(response)
+        df = pd.json_normalize(serializer.data)
+        field_names = list(df.columns)
+        writer.writerow(field_names)
+        for index, row in df.iterrows():
+            writer.writerow(row)
+
+        return response

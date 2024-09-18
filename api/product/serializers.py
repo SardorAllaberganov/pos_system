@@ -28,7 +28,11 @@ class ProductSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_category(obj):
-        return obj.subcategory.category.name if obj.subcategory and obj.subcategory.category else None
+        return (
+            {
+                "id": obj.subcategory.category.id,
+                "name": obj.subcategory.category.name,
+            } if obj.subcategory and obj.subcategory.category else None)
 
     class Meta:
         model = Product
