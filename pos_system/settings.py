@@ -153,14 +153,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
+USE_TZ = True
 TIME_ZONE = 'Asia/Tashkent'
 
-USE_I18N = True
+USE_I18N = False
 
-USE_TZ = True
 
-DATETIME_FORMAT = "d-m-Y H:i:s"
-USE_L10N = False
+# DATETIME_FORMAT = "d-m-Y H:i:s"
+# USE_L10N = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

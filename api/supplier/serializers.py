@@ -14,12 +14,15 @@ class SupplierSerializer(BaseSerializer):
         model = Supplier
         fields = '__all__'
 
-    def get_total_order_amount(self, obj):
+    @staticmethod
+    def get_total_order_amount(obj):
         return obj.total_order_amount()
 
+    @staticmethod
     def get_total_paid_amount(self, obj):
         return obj.total_paid_amount()
 
+    @staticmethod
     def get_total_due_amount(self, obj):
         return obj.total_due_amount()
 
@@ -47,6 +50,7 @@ class PurchaseOrderSerializer(BaseSerializer):
 
 class PurchaseOrderItemSerializer(BaseSerializer):
     total_amount = serializers.ReadOnlyField(source='total_price')
+
     class Meta:
         model = PurchaseOrderItem
         fields = '__all__'

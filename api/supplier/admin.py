@@ -1,11 +1,15 @@
 from django.contrib import admin
-from django.contrib import messages
-from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum
-
+from django import forms
 from api.supplier.models import Supplier, PurchaseOrder, PurchaseOrderItem, SupplierPayment
 
-admin.site.register(Supplier)
+
+# admin.site.register(Supplier)
+
+
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'contact_person', 'address', 'phone_number', 'email', 'created_at', 'updated_at')
 
 
 @admin.register(PurchaseOrder)
@@ -19,11 +23,6 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 class PurchaseOrderItemAdmin(admin.ModelAdmin):
     list_display = ('purchase_order', 'product', 'quantity', 'purchase_price', 'total_price')
     readonly_fields = ['total_price']
-
-
-from django import forms
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
 
 
 class SupplierPaymentForm(forms.ModelForm):
@@ -46,7 +45,8 @@ class SupplierPaymentForm(forms.ModelForm):
             if due_amount < 0:
                 # raise ValidationError(_("The due amount cannot be negative. Check the payment amount."))
                 self.add_error('amount',
-                               f"The due amount cannot be negative. Check the payment amount. The due amount is {total_amount - paid_amount}")
+                               f"The due amount cannot be negative. Check the payment amount. The due amount is "
+                               f"{total_amount - paid_amount}")
 
         return amount
 
@@ -56,7 +56,6 @@ class SupplierPaymentAdmin(admin.ModelAdmin):
     list_display = ('supplier', 'purchase_order', 'amount', 'due_amount_display', 'payment_date', 'payment_method')
     list_filter = ('payment_method',)
     readonly_fields = ('due_amount_display',)
-
 
     def due_amount_display(self, obj):
         # Calculate the due amount for the related PurchaseOrder
