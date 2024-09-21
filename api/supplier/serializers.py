@@ -19,11 +19,11 @@ class SupplierSerializer(BaseSerializer):
         return obj.total_order_amount()
 
     @staticmethod
-    def get_total_paid_amount(self, obj):
+    def get_total_paid_amount(obj):
         return obj.total_paid_amount()
 
     @staticmethod
-    def get_total_due_amount(self, obj):
+    def get_total_due_amount(obj):
         return obj.total_due_amount()
 
 
