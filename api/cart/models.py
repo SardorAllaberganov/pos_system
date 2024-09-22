@@ -13,9 +13,11 @@ class Cart(models.Model):
     def __str__(self):
         return f'Cart: {self.id} - {self.customer}'
 
+    @property
     def get_total_price(self):
-        return sum(item.get_total_price() for item in self.cart_items.all())
+        return sum(item.get_total_price for item in self.cart_items.all())
 
+    @property
     def get_total_items(self):
         return sum(item.quantity for item in self.cart_items.all())
 
@@ -28,5 +30,6 @@ class CartItem(models.Model):
     def __str__(self):
         return f"{self.quantity} of {self.product.name} in Cart ({self.cart.id})"
 
+    @property
     def get_total_price(self):
         return Decimal(self.quantity) * Decimal(self.selling_price)
