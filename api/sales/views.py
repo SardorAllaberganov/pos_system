@@ -29,9 +29,7 @@ def checkout_cart(request):
                 selling_price=cart_item.product.selling_price
             )
         cart.cart_items.all().delete()
-        cart.is_active = False
         cart.delete()
-        cart.save()
         serializer = SaleSerializer(sale)
         return Response({"message": "Sale successfully created", "data": serializer.data}, status=201)
     except Cart.DoesNotExist:
