@@ -12,10 +12,12 @@ class Sale(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     payment_status = models.CharField(max_length=10, choices=[('pending', "Pending"), ('completed', "Completed")],
                                       default='pending')
+    payment_type = models.CharField(max_length=15, choices=[('cash', "Cash"), ("card", "Card"),
+                                                            ('loyalty_points', "Loyalty Points")], default="cash")
+    loyalty_points_used = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"Sale {self.id} by {self.customer.name}"
-
 
 class SaleItem(models.Model):
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE)

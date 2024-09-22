@@ -4,6 +4,7 @@ from api.core.base_serializers import BaseSerializer
 
 class SaleItemSerializer(BaseSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
+
     class Meta:
         model = SaleItem
         fields = ['id', 'product', 'product_name', 'quantity', 'selling_price', 'get_total_price']
@@ -16,4 +17,4 @@ class SaleSerializer(BaseSerializer):
     class Meta:
         model = Sale
         fields = ['id', 'customer', 'items', 'cashier_name', 'total_amount', 'total_amount', 'created_at', 'updated_at',
-                  'payment_status']
+                  'payment_status', 'payment_type', 'loyalty_points_used']
