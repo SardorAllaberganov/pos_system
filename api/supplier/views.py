@@ -7,7 +7,8 @@ from api.core.decorators import check_role
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@check_role('admin')
 def supplier_list(request):
     suppliers = Supplier.objects.all()
     serializer = SupplierSerializer(suppliers, many=True)
@@ -15,7 +16,8 @@ def supplier_list(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@check_role('admin')
 def supplier_detail(request, supplier_id):
     try:
         supplier = Supplier.objects.get(pk=supplier_id)

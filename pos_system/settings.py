@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # installed apps
     'rest_framework',
-    'rest_framework_simplejwt',
+    # 'rest_framework_simplejwt',
+    'rest_framework.authtoken',
     'corsheaders',
     "rest_framework_swagger",
     'drf_yasg',
@@ -76,12 +77,12 @@ SWAGGER_SETTINGS = {
 }
 
 REST_FRAMEWORK = {
-    # "DEFAULT_AUTHENTICATION_CLASSES": [
-    #     "rest_framework.authentication.TokenAuthentication",
-    # ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
@@ -159,7 +160,6 @@ USE_TZ = True
 TIME_ZONE = 'Asia/Tashkent'
 
 USE_I18N = False
-
 
 # DATETIME_FORMAT = "d-m-Y H:i:s"
 # USE_L10N = False

@@ -1,11 +1,12 @@
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegistrationSerializer, UpdateUserSerializer, UpdateUserRoleSerializer
 from django.contrib.auth import authenticate, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
 from .models import Account
 from api.core.decorators import check_role
 
@@ -27,6 +28,8 @@ def register_view(request):
             data["username"] = account.username
             data['phone_number'] = account.phone_number
             data['role'] = account.role
+            token = Token.objects.get(user=account).key
+            data["token"] = token
             return Response({"message": "User created successfully", "data": data})
         else:
             return Response({"message": serializer.errors})
@@ -41,9 +44,11 @@ def login_view(request):
         user = authenticate(username=username, password=password)
 
         if user is not None:
-            access = AccessToken.for_user(user)
+            # access = AccessToken.for_user(user)
+            Token.objects.filter(user=user).delete()
+            token, created = Token.objects.get_or_create(user=user)
             return Response({
-                "token": str(access),
+                "token": token.key,
                 "username": user.username,
                 "email": user.email,
             })
@@ -81,8 +86,13 @@ def change_password(request):
 
 
 @api_view(["POST"])
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
+    try:
+        request.user.auth_token.delete()
+    except (AttributeError, Token.DoesNotExist):
+        return Response({"error": "Token not found or already deleted"}, status=400)
     return Response({"message": "Logged out successfully"}, status=205)
 
 
