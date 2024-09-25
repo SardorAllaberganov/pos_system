@@ -73,7 +73,7 @@ class APILoggingMiddleware(MiddlewareMixin):
         if hasattr(response, 'data'):  # For DRF Response
             response_body = sanitize_data(response.data)
         else:
-            response_body = response.data.decode('utf-8', errors='replace')
+            response_body = response.content.decode('utf-8', errors='replace')
 
         duration = end_time - request.start_time
 

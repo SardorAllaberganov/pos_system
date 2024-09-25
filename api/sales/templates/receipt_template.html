@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .receipt { width: 300px; margin: 0 auto; }
+        .header { text-align: center; }
+        .items { margin-top: 20px; }
+        .item { display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <div class="header">
+            <h2>Receipt</h2>
+            <p>Receipt Number: {{ receipt.receipt_number }}</p>
+            <p>Date: {{ receipt.created_at }}</p>
+        </div>
+        <div class="items">
+            {% for item in items %}
+            <div class="item">
+                <span>{{ item.product_name }} ({{ item.quantity }})</span>
+                <span>${{ item.get_total }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="footer">
+            <h3>Total: ${{ receipt.total_amount }}</h3>
+            <p>Cashier: {{ receipt.cashier.username }}</p>
+            <p>Customer: {{ receipt.customer }}</p>
+        </div>
+    </div>
+</body>
+</html>

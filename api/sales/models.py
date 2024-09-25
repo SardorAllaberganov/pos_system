@@ -4,6 +4,7 @@ from api.customer.models import Customer
 from api.user.models import Account
 from decimal import Decimal
 
+
 class Sale(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     cashier = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True)
@@ -19,8 +20,9 @@ class Sale(models.Model):
     def __str__(self):
         return f"Sale {self.id} by {self.customer.name}"
 
+
 class SaleItem(models.Model):
-    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -28,3 +30,16 @@ class SaleItem(models.Model):
     @property
     def get_total_price(self):
         return Decimal(self.quantity) * Decimal(self.selling_price)
+
+
+class Receipt(models.Model):
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    receipt_number = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    cashier = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_type = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f"Receipt {self.receipt_number} for Sale {self.sale.id}"

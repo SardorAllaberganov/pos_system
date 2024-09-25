@@ -3,9 +3,19 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import permission_classes, api_view
 from decimal import Decimal
 from api.cart.models import Cart
-from .models import Sale, SaleItem
-from .serializers import SaleSerializer
+from .models import Sale, SaleItem, Receipt
+from .serializers import SaleSerializer, ReceiptSerializer
 from api.customer.models import Customer
+
+from django.http import HttpResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -49,3 +59,88 @@ def checkout_cart(request):
         return Response({"message": "Sale successfully created", "data": serializer.data}, status=201)
     except Cart.DoesNotExist:
         return Response({"message": "No active cart found"}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_receipt(request, sale_id):
+    try:
+        receipt = Receipt.objects.get(sale__id=sale_id)
+        serializer = ReceiptSerializer(receipt)
+        print(serializer)
+        return Response({"message": "Receipt successfully fetched", "data": serializer.data}, status=201)
+    except Receipt.DoesNotExist:
+        return Response({"message": "No receipt found"}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_receipt_pdf(request, receipt_number):
+    try:
+        receipt = Receipt.objects.get(receipt_number=receipt_number)
+    except Receipt.DoesNotExist:
+        return HttpResponse("Receipt not found.", status=404)
+
+        # Create a PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="receipt_{receipt.receipt_number}.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter  # Set page size
+
+    # Add a logo (optional)
+    # p.drawImage("path/to/logo.png", 50, 700, width=100, height=50)  # Uncomment to add a logo
+
+    # Draw header
+    p.setFillColor(colors.lightgrey)
+    p.rect(50, 740, 500, 50, fill=1)  # Header background
+    p.setFont('Helvetica-Bold', 24)
+    p.setFillColor(colors.black)
+    p.drawString(250, 760, "Receipt")
+
+    # Draw receipt details
+    p.setFont('Helvetica', 12)
+    y_position = 700
+    p.drawString(100, y_position, f"Receipt Number: {receipt.receipt_number}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Cashier: {receipt.cashier.name}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Customer: {receipt.customer.name}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Created At: {receipt.created_at}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Total Amount: ${receipt.total_amount:.2f}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Payment Type: {receipt.payment_type}")
+
+    # Draw a line to separate sections
+    p.setStrokeColor(colors.black)
+    p.line(100, y_position - 10, 500, y_position - 10)
+
+    # Prepare items data for the table
+    items_data = [["Product", "Quantity", "Price"]]
+    for item in receipt.sale.items.all():
+        items_data.append([item.product, str(item.quantity), f"${item.selling_price:.2f}"])
+
+    # Create a table for items
+    table = Table(items_data)
+    style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ])
+    table.setStyle(style)
+
+    # Draw the table
+    table.wrapOn(p, width, height)
+    table.drawOn(p, 100, y_position - 60)  # Adjust position as needed
+
+    # Finalize the PDF
+    p.showPage()
+    p.save()
+
+    return response
