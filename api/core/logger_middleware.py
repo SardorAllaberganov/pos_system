@@ -44,7 +44,6 @@ class APILoggingMiddleware(MiddlewareMixin):
         file_handler = logging.FileHandler(filename=log_filename)
         file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 
-        # Add the new file handler to the logger
         logger.addHandler(file_handler)
 
         if request.method in ['POST', 'PUT', 'PATCH']:
@@ -54,9 +53,8 @@ class APILoggingMiddleware(MiddlewareMixin):
             except json.JSONDecodeError:
                 request_body = "Invalid JSON"
         else:
-            request_body = {}
+            request_body = request.body.decode('utf-8', errors='replace')
 
-        # Log the request details
         message = (
             f"\n------------\n"
             f"--REQUEST--\n"
@@ -64,7 +62,7 @@ class APILoggingMiddleware(MiddlewareMixin):
             f"URL: {request.build_absolute_uri()}\n"
             f"HEADER: {dict(request.headers)}\n"
             f"METHOD: {request.method}\n"
-            f"BODY: {request_body}\n"
+            f"REQUEST BODY: {request_body}\n"
             f"------------"
         )
         logger.info(message)
@@ -75,12 +73,12 @@ class APILoggingMiddleware(MiddlewareMixin):
         if hasattr(response, 'data'):  # For DRF Response
             response_body = sanitize_data(response.data)
         else:
-            logger.info(f"Response Body: {response.content.decode('utf-8')}")
+            response_body = response.data.decode('utf-8', errors='replace')
 
         duration = end_time - request.start_time
 
         message = (
-            f"------------\n"
+            f"\n------------\n"
             f"--RESPONSE--\n"
             f"------------\n"
             f"DURATION: {duration:.2f} seconds\n"
