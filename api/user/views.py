@@ -14,6 +14,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
+from django.views.decorators.cache import cache_page
+
+from silk.profiling.profiler import silk_profile
 
 
 @api_view(["POST"])
@@ -37,6 +40,8 @@ def register_view(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@cache_page(60*5)
+@silk_profile(name='Login view')
 def login_view(request):
     if request.method == "POST":
         username = request.data.get("username")
@@ -44,7 +49,6 @@ def login_view(request):
         user = authenticate(username=username, password=password)
 
         if user is not None:
-            # access = AccessToken.for_user(user)
             Token.objects.filter(user=user).delete()
             token, created = Token.objects.get_or_create(user=user)
             return Response({

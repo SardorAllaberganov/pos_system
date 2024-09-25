@@ -35,8 +35,8 @@ class MyAccountManager(BaseUserManager):
 
 
 class Account(AbstractBaseUser):
-    email = models.EmailField(unique=True)
-    username = models.CharField(max_length=30, unique=True)
+    email = models.EmailField(unique=True, db_index=True)
+    username = models.CharField(max_length=30, unique=True, db_index=True)
     name = models.CharField(max_length=30)
     phone_number = models.CharField(max_length=12)
     role = models.CharField(max_length=7, choices=(('admin', 'Admin'), ('cashier', 'Cashier'), ('manager', 'Manager')),

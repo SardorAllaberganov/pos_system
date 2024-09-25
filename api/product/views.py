@@ -9,10 +9,12 @@ from .serializers import ProductSerializer
 from api.core.paginator import CustomPagination
 from api.core.decorators import check_role
 from django.db.models import Q
+from django.views.decorators.cache import cache_page
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@cache_page(60*15)
 def all_products(request):
     search = request.GET.get('search', None)
     category = request.GET.get('category', None)
