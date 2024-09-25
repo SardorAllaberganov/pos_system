@@ -1,5 +1,7 @@
 import logging
 import json
+import time
+
 
 logger = logging.getLogger('api_logger')
 SENSITIVE_FIELDS = ['password', 'token']
@@ -24,6 +26,9 @@ class APILoggingMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+
+        start_time = time.time()
+
         # Log request details
         if request.method in ['POST', 'PUT', 'PATCH']:
             try:
@@ -34,21 +39,32 @@ class APILoggingMiddleware:
         else:
             request_body = {}
 
-        logger.info(f"Request Method: {request.method}")
-        logger.info(f"Request URL: {request.build_absolute_uri()}")
-        logger.info(f"Request Headers: {dict(request.headers)}")
-        logger.info(f"Request Body: {request_body}")
+        logger.info("------------")
+        logger.info("--REQUEST--")
+        logger.info("------------")
+        logger.info(f"URL: {request.build_absolute_uri()}")
+        logger.info(f"HEADER: {dict(request.headers)}")
+        logger.info(f"METHOD: {request.method}")
+        logger.info(f"BODY: {request_body}")
+        logger.info("------------")
 
         # Get the response
         response = self.get_response(request)
+        end_time = time.time()
+        duration = end_time - start_time
+        duration = round(duration, 2)
+
+        logger.info(f"--RESPONSE--")
+        logger.info(f"------------")
+        logger.info(f"DURATION: {duration}")
+        logger.info(f"CODE: {response.status_code}")
+        logger.info(f"RESPONSE HEADERS: {dict(response.items())}")
 
         # Log response details
-        logger.info(f"Response Status Code: {response.status_code}")
-        logger.info(f"Response Headers: {dict(response.items())}")
         if hasattr(response, 'data'):  # For DRF Response
             response_body = sanitize_data(response.data)
-            logger.info(f"Response Body: {response_body}")
+            logger.info(f"BODY: {response_body}\n")
         else:
-            logger.info(f"Response Body: {response.content.decode('utf-8')}")
+            logger.info(f"BODY: {response.content.decode('utf-8')}\n")
 
         return response

@@ -185,26 +185,61 @@ CACHES = {
 
 CACHE_TTL = 60 * 15
 
+from logging.handlers import TimedRotatingFileHandler
+from django.utils import timezone
+
+BASE_LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(BASE_LOGS_DIR, exist_ok=True)
+
+
+# Create a logs handler function to dynamically set the filename
+class CustomTimedRotatingFileHandler(TimedRotatingFileHandler):
+    def __init__(self, *args, **kwargs):
+        # Set the initial filename based on the current date and hour
+        kwargs['filename'] = self.get_log_filename()
+        super().__init__(*args, **kwargs)
+
+    def get_log_filename(self):
+        # Get current date and hour
+        now = timezone.localtime()
+
+        date_str = now.strftime('%d-%m-%Y')
+        hour_str = now.strftime('%H-00')
+
+        # Create the directory path
+        logs_path = os.path.join(BASE_LOGS_DIR, date_str, hour_str)
+        os.makedirs(logs_path, exist_ok=True)
+
+        return os.path.join(logs_path, f"{date_str}_{hour_str}_api_requests.log")
+
+    def doRollover(self):
+        # Override the doRollover method to change the log filename
+        super().doRollover()
+        self.baseFilename = self.get_log_filename()
+
+
+# Logging Configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+            'format': '%(asctime)s - %(levelname)s - %(message)s',
         },
     },
     'handlers': {
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/api_requests.log',
-            'maxBytes': 1024 * 1024 * 10,
+        'timed_file': {
+            'level': 'INFO',
+            'class': CustomTimedRotatingFileHandler,
+            'when': 'H',
+            'interval': 1,
+            'backupCount': 24,
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'api_logger': {
-            'handlers': ['file'],
+            'handlers': ['timed_file'],
             'level': 'INFO',
             'propagate': True,
         },
