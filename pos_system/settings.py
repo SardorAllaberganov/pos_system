@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+from logging import FileHandler
 from pathlib import Path
 import os
 from datetime import timedelta
@@ -185,40 +185,75 @@ CACHES = {
 
 CACHE_TTL = 60 * 15
 
-from logging.handlers import TimedRotatingFileHandler
-from django.utils import timezone
+# from logging.handlers import TimedRotatingFileHandler
+# from django.utils import timezone
 
-BASE_LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(BASE_LOGS_DIR, exist_ok=True)
-
-
-# Create a logs handler function to dynamically set the filename
-class CustomTimedRotatingFileHandler(TimedRotatingFileHandler):
-    def __init__(self, *args, **kwargs):
-        # Set the initial filename based on the current date and hour
-        kwargs['filename'] = self.get_log_filename()
-        super().__init__(*args, **kwargs)
-
-    def get_log_filename(self):
-        # Get current date and hour
-        now = timezone.localtime()
-
-        date_str = now.strftime('%d-%m-%Y')
-        hour_str = now.strftime('%H-00')
-
-        # Create the directory path
-        logs_path = os.path.join(BASE_LOGS_DIR, date_str, hour_str)
-        os.makedirs(logs_path, exist_ok=True)
-
-        return os.path.join(logs_path, f"{date_str}_{hour_str}_api_requests.log")
-
-    def doRollover(self):
-        # Override the doRollover method to change the log filename
-        super().doRollover()
-        self.baseFilename = self.get_log_filename()
+# BASE_LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+# os.makedirs(BASE_LOGS_DIR, exist_ok=True)
+#
+#
+# class CustomTimedRotatingFileHandler(TimedRotatingFileHandler):
+#     def __init__(self, *args, **kwargs):
+#         # Set initial filename
+#         kwargs['filename'] = self.get_log_filename()
+#         super().__init__(*args, **kwargs)
+#
+#     def get_log_filename(self):
+#         now = timezone.localtime()
+#         date_str = now.strftime('%d-%m-%Y')
+#         hour_str = now.strftime('%H-00')
+#
+#         # Construct the directory path (day and hourly subfolders)
+#         logs_path = os.path.join(BASE_LOGS_DIR, date_str, hour_str)
+#
+#         # Create the directory structure if it doesn't exist
+#         os.makedirs(logs_path, exist_ok=True)
+#
+#         # Return the full path to the log file
+#         return os.path.join(logs_path, f"{date_str}_{hour_str}_api_requests.log")
+#
+#     def doRollover(self):
+#         # Close the stream before rolling over
+#         if self.stream:
+#             self.stream.close()
+#             self.stream = None
+#
+#         # Update the base filename
+#         self.baseFilename = self.get_log_filename()
+#
+#         # Perform log rotation
+#         super().doRollover()
 
 
 # Logging Configuration
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'verbose': {
+#             'format': '%(asctime)s - %(levelname)s - %(message)s',
+#         },
+#     },
+#     'handlers': {
+#         'timed_file': {
+#             'level': 'INFO',
+#             'class': CustomTimedRotatingFileHandler,
+#             'when': 'H',
+#             'interval': 1,
+#             'backupCount': 24,
+#             'formatter': 'verbose',
+#         },
+#     },
+#     'loggers': {
+#         'api_logger': {
+#             'handlers': ['timed_file'],
+#             'level': 'INFO',
+#             'propagate': True,
+#         },
+#     },
+# }
+BASE_LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -228,18 +263,14 @@ LOGGING = {
         },
     },
     'handlers': {
-        'timed_file': {
-            'level': 'INFO',
-            'class': CustomTimedRotatingFileHandler,
-            'when': 'H',
-            'interval': 1,
-            'backupCount': 24,
+        'console': {
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'api_logger': {
-            'handlers': ['timed_file'],
+            'handlers': ['console'],  # By default, it logs to the console
             'level': 'INFO',
             'propagate': True,
         },

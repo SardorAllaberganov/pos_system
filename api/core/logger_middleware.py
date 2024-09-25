@@ -1,10 +1,15 @@
 import logging
 import json
-import time
-
+from time import time
+from django.utils.deprecation import MiddlewareMixin
+import os
+from django.utils import timezone
+from django.conf import settings
 
 logger = logging.getLogger('api_logger')
 SENSITIVE_FIELDS = ['password', 'token']
+
+BASE_LOGS_DIR = getattr(settings, 'BASE_LOGS_DIR', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs'))
 
 
 def sanitize_data(data):
@@ -17,19 +22,31 @@ def sanitize_data(data):
     return data
 
 
-class APILoggingMiddleware:
-    """
-    Middleware for logging all API requests and responses.
-    """
+class APILoggingMiddleware(MiddlewareMixin):
+    @staticmethod
+    def process_request(request):
+        request.start_time = time()
 
-    def __init__(self, get_response):
-        self.get_response = get_response
+        now = timezone.localtime()
+        date_str = now.strftime('%d-%m-%Y')
+        hour_str = now.strftime('%H-00')
 
-    def __call__(self, request):
+        # Build the dynamic path for the log file
+        log_dir = os.path.join(BASE_LOGS_DIR, date_str, hour_str)
+        os.makedirs(log_dir, exist_ok=True)
 
-        start_time = time.time()
+        log_filename = os.path.join(log_dir, f"{date_str}_{hour_str}_api_requests.log")
 
-        # Log request details
+        # Clear existing handlers to avoid duplicates
+        logger.handlers.clear()
+
+        # Create a new file handler dynamically for the request
+        file_handler = logging.FileHandler(filename=log_filename)
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+        # Add the new file handler to the logger
+        logger.addHandler(file_handler)
+
         if request.method in ['POST', 'PUT', 'PATCH']:
             try:
                 request_body = json.loads(request.body.decode('utf-8'))
@@ -39,32 +56,39 @@ class APILoggingMiddleware:
         else:
             request_body = {}
 
-        logger.info("------------")
-        logger.info("--REQUEST--")
-        logger.info("------------")
-        logger.info(f"URL: {request.build_absolute_uri()}")
-        logger.info(f"HEADER: {dict(request.headers)}")
-        logger.info(f"METHOD: {request.method}")
-        logger.info(f"BODY: {request_body}")
-        logger.info("------------")
+        # Log the request details
+        message = (
+            f"\n------------\n"
+            f"--REQUEST--\n"
+            f"------------\n"
+            f"URL: {request.build_absolute_uri()}\n"
+            f"HEADER: {dict(request.headers)}\n"
+            f"METHOD: {request.method}\n"
+            f"BODY: {request_body}\n"
+            f"------------"
+        )
+        logger.info(message)
 
-        # Get the response
-        response = self.get_response(request)
-        end_time = time.time()
-        duration = end_time - start_time
-        duration = round(duration, 2)
-
-        logger.info(f"--RESPONSE--")
-        logger.info(f"------------")
-        logger.info(f"DURATION: {duration}")
-        logger.info(f"CODE: {response.status_code}")
-        logger.info(f"RESPONSE HEADERS: {dict(response.items())}")
-
-        # Log response details
+    @staticmethod
+    def process_response(request, response):
+        end_time = time()
         if hasattr(response, 'data'):  # For DRF Response
             response_body = sanitize_data(response.data)
-            logger.info(f"BODY: {response_body}\n")
         else:
-            logger.info(f"BODY: {response.content.decode('utf-8')}\n")
+            logger.info(f"Response Body: {response.content.decode('utf-8')}")
+
+        duration = end_time - request.start_time
+
+        message = (
+            f"------------\n"
+            f"--RESPONSE--\n"
+            f"------------\n"
+            f"DURATION: {duration:.2f} seconds\n"
+            f"STATUS: {response.status_code}\n"
+            f"RESPONSE BODY: {response_body}\n"
+            f"------------\n"
+        )
+        logger.info(message)
+        logger.handlers.clear()
 
         return response
