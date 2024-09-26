@@ -14,7 +14,7 @@ from django.views.decorators.cache import cache_page
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@cache_page(60*15)
+# @cache_page(60 * 15)
 def all_products(request):
     search = request.GET.get('search', None)
     category = request.GET.get('category', None)
@@ -41,12 +41,22 @@ def all_products(request):
     paginator = CustomPagination()
     paginated_products = paginator.paginate_queryset(products, request)
     serializer = ProductSerializer(paginated_products, many=True)
-    return Response({"message": "All products fetched successfully", "data": serializer.data}, status=200)
+    data = serializer.data
+
+    for product in data:
+        product_image = product.get('product_image', '')
+        if product_image.startswith('/media/http%3A'):
+            fixed_url = product_image.replace('/media/http%3A', 'http://')
+            product['product_image'] = fixed_url
+
+    return Response(
+        {"message": "All products fetched successfully", "page": int(paginator.get_page_number(request, data)),
+         "page_items": paginator.get_page_size(request), "data": data}, status=200)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@cache_page(60*15)
+@cache_page(60 * 15)
 def product_detail(request, product_id):
     try:
         product = Product.objects.get(pk=product_id)
