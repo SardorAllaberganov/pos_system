@@ -6,16 +6,15 @@ from api.cart.models import Cart
 from .models import Sale, SaleItem, Receipt
 from .serializers import SaleSerializer, ReceiptSerializer
 from api.customer.models import Customer
+from api.core.paginator import CustomPagination
+from django.db.models import Q
+from datetime import datetime
 
 from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import Table, TableStyle
 from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
-
-
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -60,7 +59,6 @@ def checkout_cart(request):
     except Cart.DoesNotExist:
         return Response({"message": "No active cart found"}, status=404)
 
-
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_receipt(request, sale_id):
@@ -71,7 +69,6 @@ def get_receipt(request, sale_id):
         return Response({"message": "Receipt successfully fetched", "data": serializer.data}, status=201)
     except Receipt.DoesNotExist:
         return Response({"message": "No receipt found"}, status=404)
-
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -144,3 +141,32 @@ def get_receipt_pdf(request, receipt_number):
     p.save()
 
     return response
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_all_sales(request):
+    search = request.GET.get('search')
+
+    sales = Sale.objects.all()
+
+    if search:
+        try:
+            formatted_date = datetime.strptime(search, "%d-%m-%Y").date()
+        except ValueError:
+            formatted_date = None
+        sales = sales.filter(
+            Q(id__icontains=search) |
+            Q(payment_status__icontains=search) |
+            Q(customer__id__icontains=search) |
+            Q(cashier__name__icontains=search) |
+            Q(payment_type__icontains=search) |
+            Q(created_at__date=formatted_date) if formatted_date else Q()
+        )
+
+    paginator = CustomPagination()
+    paginated_sales = paginator.paginate_queryset(sales, request)
+    serializer = SaleSerializer(paginated_sales, many=True)
+    data = serializer.data
+    return Response(
+        {"message": "All sales fetched successfully", "page": int(paginator.get_page_number(request, data)),
+         "page_items": paginator.get_page_size(request), "data": data}, status=200)

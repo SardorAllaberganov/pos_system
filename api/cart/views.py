@@ -28,6 +28,8 @@ def add_to_cart(request):
         customer = Customer.objects.get(id=customer_id)
     except Product.DoesNotExist:
         return Response({"error": "No product found"}, status=404)
+    except Customer.DoesNotExist:
+        return Response({"error": "No customer found"}, status=404)
 
     if quantity > product.quantity:
         return Response({"detail": f"Only {product.quantity} units available in stock."}, status=400)
