@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'corsheaders',
     "rest_framework_swagger",
     'drf_yasg',
-    'silk',
     # my app
     'api.user',
     'api.supplier',
@@ -92,7 +91,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.core.logger_middleware.APILoggingMiddleware',
-    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'pos_system.urls'
@@ -209,7 +207,3 @@ LOGGING = {
         },
     },
 }
-
-SILKY_PYTHON_PROFILER = True
-SILKY_AUTHENTICATION = True
-SILKY_AUTHORISATION = True

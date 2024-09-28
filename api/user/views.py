@@ -16,7 +16,6 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.views.decorators.cache import cache_page
 
-from silk.profiling.profiler import silk_profile
 
 
 @api_view(["POST"])
@@ -41,7 +40,6 @@ def register_view(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @cache_page(60*5)
-@silk_profile(name='Login view')
 def login_view(request):
     if request.method == "POST":
         username = request.data.get("username")
