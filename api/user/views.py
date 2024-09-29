@@ -36,10 +36,8 @@ def register_view(request):
         else:
             return Response({"message": serializer.errors})
 
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
-@cache_page(60*5)
 def login_view(request):
     if request.method == "POST":
         username = request.data.get("username")
@@ -53,11 +51,11 @@ def login_view(request):
                 "token": token.key,
                 "username": user.username,
                 "email": user.email,
+                'role': user.role,
             })
         else:
             # Return an error response if authentication fails
             return Response({"error": "Invalid credentials"}, status=400)
-
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -86,7 +84,6 @@ def change_password(request):
         update_session_auth_hash(request, user)
         return Response({"message": "Password updated successfully"}, status=200)
 
-
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -96,7 +93,6 @@ def logout_view(request):
     except (AttributeError, Token.DoesNotExist):
         return Response({"error": "Token not found or already deleted"}, status=400)
     return Response({"message": "Logged out successfully"}, status=205)
-
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -111,7 +107,6 @@ def change_user_details(request):
                 "data": serializer.data
             }, status=200)
         return Response(serializer.errors, status=400)
-
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -129,7 +124,6 @@ def change_user_role(request, username):
             return Response({'message': "User role updated successfully"}, status=200)
         return Response(serializer.errors, status=400)
 
-
 @api_view(["delete"])
 @permission_classes([IsAuthenticated])
 @check_role(["admin", "manager"])
@@ -141,7 +135,6 @@ def delete_user(request, username):
             return Response({"message": "User deleted successfully"}, status=200)
         except Account.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -167,7 +160,6 @@ def reset_password(request):
             recipient_list=[email],
         )
         return Response({"message": "Password reset link sent to your email", 'link': reset_link}, status=200)
-
 
 @api_view(["POST"])
 @permission_classes([AllowAny])

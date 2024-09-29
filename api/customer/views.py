@@ -7,7 +7,7 @@ from django.db.models import Q
 from api.core.paginator import CustomPagination
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def all_customers(request):
     search = request.GET.get('search', None)
     customers = Customer.objects.all()
@@ -23,7 +23,7 @@ def all_customers(request):
     return Response({"message": "Successfully fetched all customers", "data": serializer.data}, status=200)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def customer_detail(request, customer_id):
     try:
         customer = Customer.objects.get(pk=customer_id)

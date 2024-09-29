@@ -3,15 +3,16 @@ from rest_framework.response import Response
 from api.sales.models import Sale, SaleItem
 from api.product.models import Product
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from api.core.decorators import check_role
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def sales_reports(request):
     try:
         # Top 10 selling products
-        top_selling_products = SaleItem.objects.values('product__name').annotate(
-            total_quantity=Sum('quantity')).order_by('-total_quantity')[:10]
+        top_selling_products = SaleItem.objects.values('product__name', 'sale__total_amount').annotate(
+            total_quantity=Sum('quantity')).order_by('-total_quantity')[:3]
 
         # Total sales amount and peak sales times
         total_sales_amount = Sale.objects.aggregate(total=Sum('total_amount'))['total']
@@ -35,7 +36,7 @@ def sales_reports(request):
         return Response({"error": str(e)}, status=500)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def inventory_reports(request):
     try:
         # Low stock items (restock needed)
@@ -74,7 +75,7 @@ def inventory_reports(request):
         return Response({"error": str(e)}, status=500)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def customer_reports(request):
     try:
         # Customer purchase frequency
@@ -99,7 +100,8 @@ def customer_reports(request):
         return Response({"error": str(e)}, status=500)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@check_role(['admin', 'manager'])
 def employee_performance_reports(request):
     try:
         # Employee performance based on total sales
