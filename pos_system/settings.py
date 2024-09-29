@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'api.category',
     'api.customer',
     'api.cart',
-    'api.sales'
+    'api.sales',
+    'api.reports'
 ]
 
 SWAGGER_SETTINGS = {

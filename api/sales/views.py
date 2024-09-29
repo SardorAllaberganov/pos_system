@@ -170,3 +170,5 @@ def get_all_sales(request):
     return Response(
         {"message": "All sales fetched successfully", "page": int(paginator.get_page_number(request, data)),
          "page_items": paginator.get_page_size(request), "data": data}, status=200)
+
+
