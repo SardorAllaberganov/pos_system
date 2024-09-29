@@ -4,7 +4,6 @@ from api.customer.models import Customer
 from api.user.models import Account
 from decimal import Decimal
 
-
 class Sale(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     cashier = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True, blank=True)
@@ -20,7 +19,6 @@ class Sale(models.Model):
     def __str__(self):
         return f"Sale {self.id} by {self.customer.name}"
 
-
 class SaleItem(models.Model):
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -31,6 +29,10 @@ class SaleItem(models.Model):
     def get_total_price(self):
         return Decimal(self.quantity) * Decimal(self.selling_price)
 
+    def __str__(self):
+        return (
+            f"Sale {self.id} |  Product: {self.product.name} | Quantity: {self.quantity} | Price: {self.selling_price}"
+            f" | Total: {self.get_total_price}")
 
 class Receipt(models.Model):
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
