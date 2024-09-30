@@ -5,6 +5,8 @@ from api.product.models import Product
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from api.core.decorators import check_role
+from django.utils import timezone
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -16,24 +18,32 @@ def sales_reports(request):
 
         # Total sales amount and peak sales times
         total_sales_amount = Sale.objects.aggregate(total=Sum('total_amount'))['total']
-        peak_sales_times = Sale.objects.extra(select={'hour': "strftime('%%H', updated_at)"}).values('hour').annotate(
-            total_sales=Sum('total_amount')
-        ).order_by('-total_sales')
+        sales = Sale.objects.all()
+        peak_sales_times = {}
+        for sale in sales:
+            localtime = timezone.localtime(sale.updated_at)
+            hour = localtime.strftime('%H:00')
+            if hour not in peak_sales_times:
+                peak_sales_times[hour] = 0
+            peak_sales_times[hour] += sale.total_amount
+
+        sorted_peak_sales = sorted(peak_sales_times.items(), key=lambda x: x[1], reverse=True)[:5]
 
         # Sales trends by day
         sales_trends = Sale.objects.extra(select={'day': "strftime('%%Y-%%m-%%d', updated_at)"}).values('day').annotate(
             total_sales=Sum('total_amount')
-        ).order_by('day')
+        ).order_by('day')[:5]
 
         return Response({
             "top_selling_products": top_selling_products,
             "total_sales_amount": total_sales_amount,
-            "peak_sales_times": peak_sales_times,
+            "peak_sales_times": sorted_peak_sales,
             "sales_trends": sales_trends,
         }, status=200)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -74,6 +84,7 @@ def inventory_reports(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def customer_reports(request):
@@ -98,6 +109,7 @@ def customer_reports(request):
         }, status=200)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
