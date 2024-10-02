@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 import pandas as pd
 import csv
 from api.product.models import Product
@@ -13,7 +13,7 @@ from django.views.decorators.cache import cache_page
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 # @cache_page(60 * 15)
 def all_products(request):
     search = request.GET.get('search', None)
@@ -46,16 +46,15 @@ def all_products(request):
     for product in data:
         product_image = product.get('product_image', '')
         if product_image.startswith('/media/http%3A'):
-            fixed_url = product_image.replace('/media/http%3A', 'http://')
+            fixed_url = product_image.replace('/media/http%3A', 'http:/')
             product['product_image'] = fixed_url
 
     return Response(
-        {"message": "All products fetched successfully", "page": int(paginator.get_page_number(request, data)),
-         "page_items": paginator.get_page_size(request), "data": data}, status=200)
+        {"message": "All products fetched successfully", 'pagination': paginator.get_paginated_response(), "data": data}, status=200)
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 # @cache_page(60 * 15)
 def product_detail(request, product_id):
     try:
@@ -113,7 +112,7 @@ def create_product(request):
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def product_export_csv(request):
     if request.method == "GET":
         products = Product.objects.all()
