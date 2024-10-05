@@ -101,6 +101,9 @@ class APILoggerMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """Log the API request details."""
         request.start_time = time.time()
+        # Cache request body to avoid RawPostDataException
+        if request.method in ('POST', 'PUT', 'PATCH'):
+            request.body_data = self.get_request_body(request)
 
     def process_response(self, request, response):
         """Log the API request and response details after processing the request."""
@@ -111,6 +114,14 @@ class APILoggerMiddleware(MiddlewareMixin):
         """Log the exception details when an error occurs during request processing."""
         self.exception_log(request, exception)
         return None
+
+    def get_request_body(self, request):
+        """Safely get and cache the request body to prevent reading it multiple times."""
+        try:
+            body = request.body.decode('utf-8')
+        except Exception as e:
+            body = None
+        return body
 
     def api_request(self, request, response):
         """Handles logging of API request and response."""
@@ -125,7 +136,7 @@ class APILoggerMiddleware(MiddlewareMixin):
             'url': request.build_absolute_uri(),
             'method': request.method,
             'headers': dict(request.headers),
-            'body': request.body.decode('utf-8') if request.body else None,
+            'body': getattr(request, 'body_data', None),
         }
 
         # Capture response details
