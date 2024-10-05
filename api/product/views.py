@@ -11,7 +11,6 @@ from api.core.decorators import check_role
 from django.db.models import Q
 from django.views.decorators.cache import cache_page
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 # @cache_page(60 * 15)
@@ -50,8 +49,8 @@ def all_products(request):
             product['product_image'] = fixed_url
 
     return Response(
-        {"message": "All products fetched successfully", 'pagination': paginator.get_paginated_response(), "data": data}, status=200)
-
+        {"message": "All products fetched successfully", 'pagination': paginator.get_paginated_response(),
+         "data": data}, status=200)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -63,8 +62,12 @@ def product_detail(request, product_id):
         return Response({"message": "Product not found"}, status=404)
 
     serializer = ProductSerializer(product)
-    return Response({"message": "Product fetched successfully", "data": serializer.data}, status=200)
-
+    data = serializer.data
+    product_image = data.get('product_image', '')
+    if product_image.startswith('/media/http%3A'):
+        fixed_url = product_image.replace('/media/http%3A', 'http:/')
+        data['product_image'] = fixed_url
+    return Response({"message": "Product fetched successfully", "data": data}, status=200)
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -77,7 +80,6 @@ def delete_product(request, product_id):
             return Response({"message": "Product deleted successfully"}, status=200)
         except Product.DoesNotExist:
             return Response({"message": "Product not found"}, status=404)
-
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -96,7 +98,6 @@ def update_product(request, product_id):
         else:
             return Response({"error": serializer.errors}, status=400)
 
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @check_role(["admin", 'manager'])
@@ -109,7 +110,6 @@ def create_product(request):
             serializer.save()
             return Response({"message": "Product created successfully", "data": serializer.data}, status=200)
         return Response({"error": serializer.errors}, status=400)
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
