@@ -93,11 +93,13 @@
 
 
 import time
+
 from django.utils.deprecation import MiddlewareMixin
+from . import logger
 from .logger import Logger
+from django.http import FileResponse, StreamingHttpResponse
 
 class APILoggerMiddleware(MiddlewareMixin):
-
     def process_request(self, request):
         """Log the API request details."""
         request.start_time = time.time()
@@ -139,11 +141,18 @@ class APILoggerMiddleware(MiddlewareMixin):
             'body': getattr(request, 'body_data', None),
         }
 
-        # Capture response details
+        if isinstance(response, (FileResponse, StreamingHttpResponse)):
+            logger.log_info("Skipping logging of file/streaming response content.")
+        else:
+            # Try to log the response content, but handle missing content attributes gracefully
+            try:
+                logger.log_info(f"Response Content: {response.content}")
+            except AttributeError:
+                logger.log_info("Response has no 'content' attribute, skipping content logging.")
+
         response_data = {
             'status_code': response.status_code,
-            'response_body': response.content.decode('utf-8'),
-            'duration': duration,
+            'duration': f'{duration:.2f}ms',
         }
 
         # Log both request and response

@@ -9,6 +9,7 @@ from api.customer.models import Customer
 from api.core.paginator import CustomPagination
 from django.db.models import Q
 from datetime import datetime
+from django.utils.dateparse import parse_date
 
 from django.http import HttpResponse
 from reportlab.lib import colors
@@ -150,17 +151,12 @@ def get_all_sales(request):
     sales = Sale.objects.all()
 
     if search:
-        try:
-            formatted_date = datetime.strptime(search, "%d-%m-%Y").date()
-        except ValueError:
-            formatted_date = None
         sales = sales.filter(
             Q(id__icontains=search) |
             Q(payment_status__icontains=search) |
             Q(customer__id__icontains=search) |
             Q(cashier__name__icontains=search) |
-            Q(payment_type__icontains=search) |
-            Q(created_at__date=formatted_date) if formatted_date else Q()
+            Q(payment_type__icontains=search)
         )
 
     paginator = CustomPagination()
@@ -168,7 +164,5 @@ def get_all_sales(request):
     serializer = SaleSerializer(paginated_sales, many=True)
     data = serializer.data
     return Response(
-        {"message": "All sales fetched successfully", "page": int(paginator.get_page_number(request, data)),
-         "page_items": paginator.get_page_size(request), "data": data}, status=200)
-
-
+        {"message": "All sales fetched successfully", "pagination": paginator.get_paginated_response(), "data": data},
+        status=200)
