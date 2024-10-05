@@ -18,7 +18,7 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.pdfgen import canvas
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def checkout_cart(request):
     customer_id = request.data.get("customer_id")
     try:
@@ -61,7 +61,7 @@ def checkout_cart(request):
         return Response({"message": "No active cart found"}, status=404)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_receipt(request, sale_id):
     try:
         receipt = Receipt.objects.get(sale__id=sale_id)
@@ -72,7 +72,7 @@ def get_receipt(request, sale_id):
         return Response({"message": "No receipt found"}, status=404)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_receipt_pdf(request, receipt_number):
     try:
         receipt = Receipt.objects.get(receipt_number=receipt_number)
@@ -144,7 +144,7 @@ def get_receipt_pdf(request, receipt_number):
     return response
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_all_sales(request):
     search = request.GET.get('search')
 
