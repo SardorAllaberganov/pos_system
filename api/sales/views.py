@@ -8,12 +8,12 @@ from .serializers import SaleSerializer, ReceiptSerializer
 from api.customer.models import Customer
 from api.core.paginator import CustomPagination
 from django.db.models import Q
-from datetime import datetime
-from django.utils.dateparse import parse_date
 
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
 from django.http import HttpResponse
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
 from reportlab.platypus import Table, TableStyle
 from reportlab.pdfgen import canvas
 
@@ -83,63 +83,54 @@ def get_receipt_pdf(request, receipt_number):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="receipt_{receipt.receipt_number}.pdf"'
 
-    p = canvas.Canvas(response, pagesize=letter)
-    width, height = letter  # Set page size
+    # Create a canvas object
+    pdf = canvas.Canvas(response, pagesize=A4)
+    width, height = A4
 
-    # Add a logo (optional)
-    # p.drawImage("path/to/logo.png", 50, 700, width=100, height=50)  # Uncomment to add a logo
+    # Title of the receipt
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(50, height - 50, "Receipt")
 
-    # Draw header
-    p.setFillColor(colors.lightgrey)
-    p.rect(50, 740, 500, 50, fill=1)  # Header background
-    p.setFont('Helvetica-Bold', 24)
-    p.setFillColor(colors.black)
-    p.drawString(250, 760, "Receipt")
+    # Sales information
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(50, height - 100, f"Receipt Number: {receipt.receipt_number}")
+    pdf.drawString(50, height - 120, f"Date: {receipt.created_at}")
+    pdf.drawString(50, height - 140, f"Cashier: {receipt.cashier.name}")
+    pdf.drawString(50, height - 160, f"Customer: {receipt.customer.name}")
+    pdf.drawString(50, height - 180, f"Payment Type: {receipt.payment_type}")
 
-    # Draw receipt details
-    p.setFont('Helvetica', 12)
-    y_position = 700
-    p.drawString(100, y_position, f"Receipt Number: {receipt.receipt_number}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Cashier: {receipt.cashier.name}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Customer: {receipt.customer.name}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Created At: {receipt.created_at}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Total Amount: ${receipt.total_amount:.2f}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Payment Type: {receipt.payment_type}")
-
-    # Draw a line to separate sections
-    p.setStrokeColor(colors.black)
-    p.line(100, y_position - 10, 500, y_position - 10)
-
-    # Prepare items data for the table
-    items_data = [["Product", "Quantity", "Price"]]
+    # Table for items
+    items = [["Item", "Quantity", "Price", "Total"]]
     for item in receipt.sale.items.all():
-        items_data.append([item.product, str(item.quantity), f"${item.selling_price:.2f}"])
+        items.append([item.product, str(item.quantity), f"${item.selling_price:.2f}", f"${item.get_total_price:.2f}"])
 
-    # Create a table for items
-    table = Table(items_data)
-    style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    # Total amount
+    items.append(["", "", "Total Amount:", f"${receipt.total_amount:.2f}"])
+
+    # Create a table
+    table = Table(items, colWidths=[50 * mm, 20 * mm, 40 * mm, 40 * mm])
+
+    # Set table style (minimalist)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (1, 1), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ])
-    table.setStyle(style)
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+    ]))
 
-    # Draw the table
-    table.wrapOn(p, width, height)
-    table.drawOn(p, 100, y_position - 60)  # Adjust position as needed
+    # Position the table on the page
+    table.wrapOn(pdf, width, height)
+    table.drawOn(pdf, 50, height - 270)
+
+    pdf.setFont("Helvetica-Oblique", 10)
+    pdf.drawString(50, 50, "Thank you for your purchase!")
 
     # Finalize the PDF
-    p.showPage()
-    p.save()
+    pdf.showPage()
+    pdf.save()
 
     return response
 
