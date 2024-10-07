@@ -95,9 +95,20 @@
 import time
 
 from django.utils.deprecation import MiddlewareMixin
-from . import logger
 from .logger import Logger
 from django.http import FileResponse, StreamingHttpResponse
+import json
+
+SENSITIVE_FIELDS = ['password', 'token']
+
+
+def sanitize_data(data):
+    """Obfuscate sensitive fields in the logged data."""
+    for field in SENSITIVE_FIELDS:
+        if field in data:
+            data[field] = '********'
+    return data
+
 
 class APILoggerMiddleware(MiddlewareMixin):
     def process_request(self, request):
@@ -105,7 +116,21 @@ class APILoggerMiddleware(MiddlewareMixin):
         request.start_time = time.time()
         # Cache request body to avoid RawPostDataException
         if request.method in ('POST', 'PUT', 'PATCH'):
-            request.body_data = self.get_request_body(request)
+            try:
+                # Decode the body and convert it to a Python dictionary
+                request_data = json.loads(request.body.decode('utf-8'))
+
+                # Sanitize sensitive fields in the request data
+                sanitized_data = sanitize_data(request_data)
+
+                # Cache the sanitized request body to avoid RawPostDataException
+                request.body_data = sanitized_data
+
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                # If the request body is not JSON or there's a decode error, handle it gracefully
+                request.body_data = "Unable to parse request body as JSON."
+        else:
+            request.body_data = {}
 
     def process_response(self, request, response):
         """Log the API request and response details after processing the request."""

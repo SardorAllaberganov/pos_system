@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
+
 class Logger(object):
     def __init__(self, log_type):
         self.log_type = log_type
