@@ -1,18 +1,33 @@
+from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from api.supplier.models import Supplier, PurchaseOrder, PurchaseOrderItem
 from api.supplier.serializers import SupplierSerializer, PurchaseOrderSerializer, PurchaseOrderItemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from api.core.decorators import check_role
+from api.core.paginator import CustomPagination
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 @check_role(['admin'])
 def supplier_list(request):
-    suppliers = Supplier.objects.all()
-    serializer = SupplierSerializer(suppliers, many=True)
-    return Response({"message": "Successfully fetched all suppliers", "data": serializer.data}, status=200)
+    search = request.GET.get('search')
+    suppliers = Supplier.objects.all().order_by('id')
+    if search:
+        suppliers = suppliers.filter(
+            Q(name__icontains=search) |
+            Q(phone_number__icontains=search) |
+            Q(email__icontains=search) |
+            Q(contact_person__icontains=search)
+        )
+
+    paginator = CustomPagination()
+    paginated_suppliers = paginator.paginate_queryset(suppliers, request)
+    serializer = SupplierSerializer(paginated_suppliers, many=True)
+
+    return Response({"message": "Successfully fetched all suppliers", 'pagination': paginator.get_paginated_response(),
+                     "data": serializer.data}, status=200)
 
 
 @api_view(['GET'])
@@ -23,7 +38,7 @@ def supplier_detail(request, supplier_id):
         supplier = Supplier.objects.get(pk=supplier_id)
     except Supplier.DoesNotExist:
         return Response({"message": "Supplier not found"}, status=404)
-    serializer = SupplierSerializer(supplier, many=True)
+    serializer = SupplierSerializer(supplier)
     return Response({"message": "Successfully fetched supplier", "data": serializer.data}, status=200)
 
 

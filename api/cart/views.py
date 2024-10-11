@@ -1,3 +1,4 @@
+from django.core.exceptions import MultipleObjectsReturned
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
@@ -6,16 +7,22 @@ from api.customer.models import Customer
 from .models import Cart, CartItem
 from ..product.models import Product
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_cart(request):
     customer = request.data.get("customer")
     try:
         cart = Cart.objects.get(customer=customer, is_active=True)
+        cart_item = CartItem.objects.filter(cart=cart)
         serializer = CartSerializer(cart)
-        return Response({"message": "All carts", "data": serializer.data}, status=200)
+        serializer_item = CartItemSerializer(cart_item, many=True)
+
+        return Response({"message": "All carts", "data": serializer.data, "cart_items": serializer_item.data},
+                        status=200)
     except Cart.DoesNotExist:
         return Response({"error": "No active cart found"}, status=404)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -50,6 +57,7 @@ def add_to_cart(request):
     serializer = CartItemSerializer(cart_item)
     return Response({"message": "Cart", "data": serializer.data}, status=200)
 
+
 @api_view(["PUT"])
 @permission_classes([AllowAny])
 def update_cart(request, cart_item_id):
@@ -74,6 +82,7 @@ def update_cart(request, cart_item_id):
         return Response({"detail": "Item removed from cart"}, status=204)
     return Response({"error": "Invalid quantity"}, status=400)
 
+
 @api_view(["DELETE"])
 @permission_classes([AllowAny])
 def remove_cart_item(request, cart_item_id):
@@ -83,6 +92,7 @@ def remove_cart_item(request, cart_item_id):
         return Response({"message": "Item removed from cart"}, status=204)
     except CartItem.DoesNotExist:
         return Response({"error": "No cart item found"}, status=404)
+
 
 @api_view(["DELETE"])
 @permission_classes([AllowAny])
