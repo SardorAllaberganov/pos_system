@@ -34,9 +34,18 @@ urlpatterns = [
     path('api/reports', include('api.reports.urls')),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('swagger.json/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('bot/', include('api.telegrambot.urls'))
 
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+import requests
+
+
+WEBHOOK_URL = 'https://localhost:8000/api/webhook/'
+
+# Set the webhook
+requests.post(f'https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/setWebhook', data={'url': WEBHOOK_URL})
